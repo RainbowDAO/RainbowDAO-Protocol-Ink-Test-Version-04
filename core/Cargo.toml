@@ -1,0 +1,43 @@
+[package]
+name = "core"
+version = "0.1.0"
+authors = ["Alexunderlett <Alexunderlett@163.com>"]
+edition = "2018"
+
+[dependencies]
+ink_primitives = { version = "3.0.0-rc5", path = "../ink/crates/primitives", default-features = false }
+ink_metadata = { version = "3.0.0-rc5", path = "../ink/crates/metadata", default-features = false, features = ["derive"], optional = true }
+ink_env = { version = "3.0.0-rc5", path = "../ink/crates/env", default-features = false }
+ink_prelude = { version = "3.0.0-rc5", path = "../ink/crates/prelude", default-features = false }
+ink_storage = { version = "3.0.0-rc5", path = "../ink/crates/storage", default-features = false }
+ink_lang = { version = "3.0.0-rc5", path = "../ink/crates/lang", default-features = false }
+
+scale = { package = "parity-scale-codec", version = "2.0.1", default-features = false, features = ["derive"] }
+scale-info = { version = "1", default-features = false, features = ["derive"], optional = true }
+
+role_manage ={ version = "0.1.0", path = "../roleManage_y", default-features = false, features = ["ink-as-dependency"] }
+privilege_manage ={ version = "0.1.0", path = "../privilegeManage", default-features = false, features = ["ink-as-dependency"] }
+route_manage ={ version = "0.1.0", path = "../routeManage", default-features = false, features = ["ink-as-dependency"] }
+
+[lib]
+name = "core"
+path = "lib.rs"
+crate-type = [
+	"cdylib",
+    "rlib",
+]
+
+[features]
+default = ["std"]
+std = [
+    "ink_metadata/std",
+    "ink_env/std",
+    "ink_storage/std",
+    "ink_primitives/std",
+    "scale/std",
+    "scale-info/std",
+    "role_manage/std",
+    "privilege_manage/std",
+    "route_manage/std",
+]
+ink-as-dependency = []
