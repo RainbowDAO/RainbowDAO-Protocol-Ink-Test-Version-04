@@ -1,0 +1,51 @@
+[package]
+name = "dao_manage"
+version = "0.1.0"
+authors = ["michaelHookon" ,"hukegong1024@gmail.com"]
+edition = "2018"
+
+[dependencies]
+ink_primitives = { version = "3.0.0-rc5", path = "../ink/crates/primitives", default-features = false }
+ink_metadata = { version = "3.0.0-rc5", path = "../ink/crates/metadata", default-features = false, features = ["derive"], optional = true }
+ink_env = { version = "3.0.0-rc5", path = "../ink/crates/env", default-features = false }
+ink_prelude = { version = "3.0.0-rc5", path = "../ink/crates/prelude", default-features = false }
+ink_storage = { version = "3.0.0-rc5", path = "../ink/crates/storage", default-features = false }
+ink_lang = { version = "3.0.0-rc5", path = "../ink/crates/lang", default-features = false }
+
+scale = { package = "parity-scale-codec", version = "2.0.1", default-features = false, features = ["derive"] }
+scale-info = { version = "1", default-features = false, features = ["derive"], optional = true }
+dao_base_info = {version = "0.1.0", path = "../daoBaseInfo",  default-features = false, features = ["ink-as-dependency"]}
+erc20_factory = {version = "0.1.0", path = "../erc20Factory",  default-features = false, features = ["ink-as-dependency"]}
+dao_vault = {version = "0.1.0", path = "../daoVault",  default-features = false, features = ["ink-as-dependency"]}
+dao_user = {version = "0.1.0", path = "../daoUsers",  default-features = false, features = ["ink-as-dependency"]}
+dao_proposal = {version = "0.1.0", path = "../daoProposal",  default-features = false, features = ["ink-as-dependency"]}
+dao_vote = {version = "0.1.0", path = "../daoVote",  default-features = false, features = ["ink-as-dependency"]}
+
+
+
+[lib]
+name = "dao_manage"
+path = "lib.rs"
+crate-type = [
+	"cdylib",
+    "rlib",
+]
+
+[features]
+default = ["std"]
+std = [
+    "ink_metadata/std",
+    "ink_env/std",
+    "ink_storage/std",
+    "ink_primitives/std",
+    "scale/std",
+    "scale-info/std",
+    "dao_base_info/std",
+    "erc20_factory/std",
+    "dao_vault/std",
+    "dao_user/std",
+    "dao_proposal/std",
+    "dao_vote/std",
+
+]
+ink-as-dependency = []
