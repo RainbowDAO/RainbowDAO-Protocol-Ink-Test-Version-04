@@ -1,16 +1,18 @@
 #![cfg_attr(not(feature = "std"), no_std)]
-
+extern crate alloc;
 use ink_lang as ink;
 
 #[ink::contract]
 mod incomeCategory {
-
+    use alloc::string::String;
+    use ink_storage::{collections::HashMap as StorageHashMap};
     /// Defines the storage of your contract.
     /// Add new fields to the below struct in order
     /// to add new static storage fields to your contract.
     #[ink(storage)]
     pub struct IncomeCategory {
         /// Stores a single `bool` value on the storage.
+        category_map:StorageHashMap<AccountId,u64>,
         value: bool,
     }
 
@@ -18,7 +20,7 @@ mod incomeCategory {
         /// Constructor that initializes the `bool` value to the given `init_value`.
         #[ink(constructor)]
         pub fn new(init_value: bool) -> Self {
-            Self { value: init_value }
+            Self { value: init_value , category_map:StorageHashMap::new() }
         }
 
         /// Constructor that initializes the `bool` value to `false`.
@@ -33,7 +35,7 @@ mod incomeCategory {
         /// This one flips the value of the stored `bool` from `true`
         /// to `false` and vice versa.
         #[ink(message)]
-        pub fn flip(&mut self) {
+        pub fn set_income_category(&mut self, ) {
             self.value = !self.value;
         }
 

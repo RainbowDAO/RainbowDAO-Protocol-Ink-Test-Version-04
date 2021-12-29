@@ -20,7 +20,7 @@ mod erc20_factory {
         owner: AccountId,
         index: u64,
         token: StorageHashMap<u64,AccountId>,
-        symbol_token: StorageHashMap<String, u64>,
+        symbol_token: StorageHashMap<String, AccountId>,
         test_ins: Erc20,
     }
 
@@ -56,7 +56,7 @@ mod erc20_factory {
             let total_balance = Self::env().balance();
             let num: i32 = 1;
             let salt = num.to_le_bytes();
-            let instance_params = Erc20::new(name,symbol,initial_supply,decimals, controller)
+            let instance_params = Erc20::new(name,symbol.clone(),initial_supply,decimals, controller)
                 .endowment(RENT_VALUE)
                 .code_hash(erc20_hash)
                 .salt_bytes(salt)
@@ -64,6 +64,7 @@ mod erc20_factory {
             let test_result = ink_env::instantiate_contract(&instance_params);
             let contract_addr = test_result.expect("failed at instantiating the `ERC20` contract");
             self.token.insert(self.index,contract_addr);
+            self.symbol_token.insert(symbol, contract_addr);
             self.index += 1;
             true
         }
@@ -72,7 +73,10 @@ mod erc20_factory {
         pub fn get_token_by_index(&self,index: u64) -> AccountId {
             self.token.get(&index).unwrap().clone()
         }
-        
+        #[ink(message)]
+        pub fn get_token_by_symbol(&self, name:String) -> AccountId {
+            self.symbol_token.get(&name).unwrap().clone()
+        }   
         
 
         #[ink(message)]

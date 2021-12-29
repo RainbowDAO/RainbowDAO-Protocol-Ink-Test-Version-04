@@ -23,6 +23,8 @@ mod dao_manage {
     pub struct DaoManage {
         // dao_addr:AccountId,
         dao_manager:AccountId,
+        reward_addr:AccountId,
+        erc20_addr:AccountId,
         pub contract_instance: ContractInstance,
         pub contract_addr: ContractAddr,
         contract_hash:StorageHashMap<String, Hash>,
@@ -83,6 +85,8 @@ mod dao_manage {
                 map.insert(name.clone(),hash);
             }
             Self {
+                reward_addr:AccountId::default(),
+                erc20_addr:AccountId::default(),
                 dao_manager:owner,
                 contract_hash:map,
                 // dao_addr:Default::default(),
@@ -187,7 +191,7 @@ mod dao_manage {
         assert_eq!(total_balance > RENT_VALUE ,true);
         let num:u64 = self.env().block_timestamp();
         let salt = num.to_le_bytes();
-        let instance_params = DaoUsers::new(caller)
+        let instance_params = DaoUsers::new(caller, self.erc20_addr, self.reward_addr)
             .endowment(RENT_VALUE)
             .code_hash(*self.contract_hash.get(&contract_name).unwrap())
             .salt_bytes(salt)
@@ -399,6 +403,24 @@ mod dao_manage {
         pub fn check_proposal_status(&self, proposal_name:String , proposal_id:u64) ->u32{
             let mut instance: DaoProposal = self.contract_instance.dao_proposal.as_ref().unwrap().clone();
             instance._check_status(proposal_name ,proposal_id)
+        }
+        #[ink(message)]
+        pub fn mint_new_token(&mut self, erc20_hash: Hash,name:String ,symbol:String ,initial_supply:u64, decimals:u8, controller: AccountId) ->bool{
+            let mut instance: Erc20Factory = self.contract_instance.erc20_factory.as_ref().unwrap().clone();
+            instance.mint_token(erc20_hash ,name,symbol,initial_supply,decimals,controller);
+            true
+        }
+        #[ink(message)]
+        pub fn check_erc20_addr(&mut self,name:String) ->bool{
+            let mut instance: Erc20Factory = self.contract_instance.erc20_factory.as_ref().unwrap().clone();
+           self.erc20_addr =  instance.get_token_by_symbol(name);
+            true
+        }
+        #[ink(message)]
+        pub fn insert_reward_system_addr(&mut self,reward_system_addr:AccountId) -> bool{
+            assert!(self.env().caller() == self.dao_manager);
+            self.reward_addr = reward_system_addr;
+            true
         }
     }
 }
