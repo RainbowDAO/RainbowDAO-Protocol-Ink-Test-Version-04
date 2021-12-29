@@ -17,7 +17,7 @@ mod dao_factory {
     };
 
     use template_manage::TemplateManage;
-    use dao_manage::DAOManager;
+    use dao_manage::DaoManage;
     const RENT_VALUE: u128 = 1000 * 1_000_000_000_000;
 
     #[derive(scale::Encode, scale::Decode, Clone, SpreadLayout, PackedLayout)]
@@ -33,7 +33,7 @@ mod dao_factory {
         name: String,
         logo: String,
         desc: String,
-        dao_manage: DAOManager,
+        dao_manage: DaoManage,
         dao_manage_addr: AccountId,
     }
     
@@ -84,20 +84,20 @@ mod dao_factory {
             self.template_addr = contract_addr;
             true
         }
-        pub fn init_dao_by_template(&mut self, index: u64, controller: AccountId,version: u8) -> bool {
+        pub fn init_dao_by_template(&mut self, index: u64, contract_name:Vec<String>,contract_hash:Vec<Hash>,controller: AccountId,version: u8) -> bool {
             assert_eq!(self.instance_index + 1 > self.instance_index, true);
             
             let template = self.template.query_template_by_index(index);
             let dao_manage_code_hash = template.dao_manage_code_hash;
             let salt = version.to_le_bytes();
-            let dao_instance_params = DAOManager::new()
+            let dao_instance_params = DaoManage::new(contract_name,contract_hash,controller)
                 .endowment(RENT_VALUE)
                 .code_hash(dao_manage_code_hash)
                 .salt_bytes(salt)
                 .params();
             let dao_init_result = ink_env::instantiate_contract(&dao_instance_params);
             let dao_addr = dao_init_result.expect("failed at instantiating the `DAO Instance` contract");
-            let mut dao_instance: DAOManager = ink_env::call::FromAccountId::from_account_id(dao_addr);
+            let mut dao_instance: DaoManage = ink_env::call::FromAccountId::from_account_id(dao_addr);
             // dao_instance.set_template(template);
             self.env().emit_event(InstanceDAO {
                 index: self.instance_index,

@@ -3,7 +3,7 @@
 use ink_lang as ink;
 
 #[ink::contract]
-mod rainbowGovnance {
+mod rainbow_govnance {
 
     /// Defines the storage of your contract.
     /// Add new fields to the below struct in order

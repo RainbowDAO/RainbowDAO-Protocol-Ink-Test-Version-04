@@ -2,11 +2,11 @@
 
 extern crate alloc;
 use ink_lang as ink;
-pub use self::daoGovnance::DaoGovnance;
+pub use self::dao_govnance::DaoGovnance;
 
 #[ink::contract]
 
-mod daoGovnance {
+mod dao_govnance {
     
 
 
