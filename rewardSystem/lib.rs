@@ -19,7 +19,7 @@ mod reward_system {
         level:u64,
         dao_type: StorageHashMap<String, u64>,
         refer_user: StorageHashMap<AccountId,AccountId>,
-        my_invite_amount: StorageHashMap<(AccountId,u64), u64>,//地址对应层级对应数量
+        my_invite_amount: StorageHashMap<(AccountId,u64), u64>,//Corresponding number of address corresponding levels
         user_amount:StorageHashMap<AccountId,u64>,
         income_proportion:u64,
 
