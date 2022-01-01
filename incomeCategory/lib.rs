@@ -6,43 +6,36 @@ use ink_lang as ink;
 mod incomeCategory {
     use alloc::string::String;
     use ink_storage::{collections::HashMap as StorageHashMap};
-    /// Defines the storage of your contract.
-    /// Add new fields to the below struct in order
-    /// to add new static storage fields to your contract.
     #[ink(storage)]
     pub struct IncomeCategory {
-        /// Stores a single `bool` value on the storage.
-        category_map:StorageHashMap<AccountId,u64>,
-        value: bool,
+        manager:AccountId,
+        category_map:StorageHashMap<(AccountId,u64), u64>,
     }
 
     impl IncomeCategory {
         /// Constructor that initializes the `bool` value to the given `init_value`.
         #[ink(constructor)]
-        pub fn new(init_value: bool) -> Self {
-            Self { value: init_value , category_map:StorageHashMap::new() }
+        pub fn new(manager:AccountId) -> Self {
+            Self { 
+                manager,
+                category_map:StorageHashMap::new() 
+            }
         }
 
-        /// Constructor that initializes the `bool` value to `false`.
-        ///
-        /// Constructors can delegate to other constructors.
-        #[ink(constructor)]
-        pub fn default() -> Self {
-            Self::new(Default::default())
-        }
-
-        /// A message that can be called on instantiated contracts.
-        /// This one flips the value of the stored `bool` from `true`
-        /// to `false` and vice versa.
         #[ink(message)]
-        pub fn set_income_category(&mut self, ) {
-            self.value = !self.value;
+        pub fn set_income_category(&mut self,user_addr:AccountId, income_category:u64, amount:u64 ) ->bool {
+            assert!(self.manager == self.env().caller());
+            self.category_map.insert((user_addr, income_category),amount);
+            true
         }
 
-        /// Simply returns the current value of our `bool`.
         #[ink(message)]
-        pub fn get(&self) -> bool {
-            self.value
+        pub fn get_user_amount(&self, user_addr:AccountId, income_category:u64) -> u64 {
+            *self.category_map.get(&(user_addr,income_category)).unwrap()
+        }
+        #[ink(message)]
+        pub fn check_manager(&self) ->AccountId{
+            self.manager
         }
     }
 
