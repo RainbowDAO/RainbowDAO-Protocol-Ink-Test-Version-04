@@ -1,74 +1,90 @@
 #![cfg_attr(not(feature = "std"), no_std)]
-
+extern crate alloc;
 use ink_lang as ink;
+
+pub use self::rainbow_govnance::RainbowGovnance;
 
 #[ink::contract]
 mod rainbow_govnance {
-
-    /// Defines the storage of your contract.
-    /// Add new fields to the below struct in order
-    /// to add new static storage fields to your contract.
+    use alloc::string::String;
+    use ink_storage::{
+        collections::HashMap as StorageHashMap,
+        traits::{PackedLayout, SpreadLayout},
+    };
+  
+    #[derive(scale::Encode, scale::Decode, Clone, SpreadLayout, PackedLayout)]
+    #[cfg_attr(
+    feature = "std", 
+    derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
+    )]
+    pub struct DisplayDaoGovnanceInfo {
+        manager: AccountId,
+        g_name: String,
+        desc: String,
+    }
     #[ink(storage)]
     pub struct RainbowGovnance {
-        /// Stores a single `bool` value on the storage.
-        value: bool,
+        manager:AccountId,
+        name: String,
+        desc: String,
+        authority:StorageHashMap<AccountId, u64>,
     }
+ 
 
     impl RainbowGovnance {
-        /// Constructor that initializes the `bool` value to the given `init_value`.
         #[ink(constructor)]
-        pub fn new(init_value: bool) -> Self {
-            Self { value: init_value }
+        pub fn new(manager:AccountId) -> Self {
+            Self { 
+                manager,
+                name:String::default(),
+                desc:String::default(),
+                authority:StorageHashMap::new(),
+            }
         }
-
-        /// Constructor that initializes the `bool` value to `false`.
-        ///
-        /// Constructors can delegate to other constructors.
-        #[ink(constructor)]
-        pub fn default() -> Self {
-            Self::new(Default::default())
-        }
-
-        /// A message that can be called on instantiated contracts.
-        /// This one flips the value of the stored `bool` from `true`
-        /// to `false` and vice versa.
         #[ink(message)]
-        pub fn flip(&mut self) {
-            self.value = !self.value;
+        pub fn set_name(&mut self,name: String){
+            self.name = String::from(name);
         }
-
-        /// Simply returns the current value of our `bool`.
         #[ink(message)]
-        pub fn get(&self) -> bool {
-            self.value
+        pub fn get_name(&self) -> String{
+            self.name.clone()
         }
-    }
-
-    /// Unit tests in Rust are normally defined within such a `#[cfg(test)]`
-    /// module and test functions are marked with a `#[test]` attribute.
-    /// The below code is technically just normal Rust code.
-    #[cfg(test)]
-    mod tests {
-        /// Imports all the definitions from the outer scope so we can use them here.
-        use super::*;
-
-        /// Imports `ink_lang` so we can use `#[ink::test]`.
-        use ink_lang as ink;
-
-        /// We test if the default constructor does its job.
-        #[ink::test]
-        fn default_works() {
-            let rainbowGovnance = RainbowGovnance::default();
-            assert_eq!(rainbowGovnance.get(), false);
+        #[ink(message)]
+        pub fn set_desc(&mut self ,desc:String){
+            self.desc = String::from(desc);
+        }
+        #[ink(message)]
+        pub fn get_desc(&self) ->String{
+            self.desc.clone()
         }
 
-        /// We test a simple use case of our contract.
-        #[ink::test]
-        fn it_works() {
-            let mut rainbowGovnance = RainbowGovnance::new(false);
-            assert_eq!(rainbowGovnance.get(), false);
-            rainbowGovnance.flip();
-            assert_eq!(rainbowGovnance.get(), true);
+        #[ink(message)]
+        pub fn set_authority(&mut self, user_addr:AccountId, authority_id:u64) ->bool{
+            assert!(self.env().caller() == self.manager);
+            self.authority.insert(user_addr,authority_id);
+            true
+        }
+        #[ink(message)]
+        pub fn set_new_manager(&mut self, to:AccountId) ->bool {
+            assert!(self.env().caller() == self.manager);
+            self.manager = to;
+            true
+        }
+        #[ink(message)]
+        pub fn get_manager(&self) ->AccountId{
+            self.manager
+        }
+        #[ink(message)]
+        pub fn get_authority_id(&self,user_addr:AccountId) -> u64 {
+            *self.authority.get(&user_addr).unwrap()
+        }
+        #[ink(message)]
+        pub fn get_baseInfo(&self) ->DisplayDaoGovnanceInfo{
+            DisplayDaoGovnanceInfo{
+                manager: self.manager,
+                g_name: self.name.clone(),
+                desc: self.desc.clone(),
+            }
         }
     }
 }

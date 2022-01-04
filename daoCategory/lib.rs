@@ -110,6 +110,13 @@ mod dao_category {
         pub fn get_dao_relationship(&self, dao_address:AccountId, dao_address1:AccountId) -> u64 {
             *self.dao_relationship.get(&(dao_address,dao_address1)).unwrap_or(&0)
         }
+        #[ink(message)]
+        pub fn change_manager(&mut self ,to:AccountId) ->bool{
+            let caller =  self.env().caller();
+            assert_eq!(caller == self.manager_address, true);
+            self.manager_address = to;
+            true
+        }
         
         // #[ink(message)]
         // pub fn change_status(&mut self, category:u64)->bool{

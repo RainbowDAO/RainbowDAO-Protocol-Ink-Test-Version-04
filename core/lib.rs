@@ -79,7 +79,7 @@ mod core {
             self.contract_instance.role_manage = Some(role_contract_instance);
             self.contract_addr.role_manage_addr = Some(role_manage_addr);
 
-            let privilege_manage = PrivilegeManage::new(self.env().account_id(),self.env().account_id())
+            let privilege_manage = PrivilegeManage::new(self.env().account_id())
                 .endowment(RENT_VALUE)
                 .code_hash(privilege_code_hash)
                 .salt_bytes(salt)
