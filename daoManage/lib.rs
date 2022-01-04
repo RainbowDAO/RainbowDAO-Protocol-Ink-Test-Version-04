@@ -14,6 +14,7 @@ mod dao_manage {
     use dao_proposal::DaoProposal;
     use dao_vote::DaoVote;
     use rainbow_govnance::RainbowGovnance;
+    use dao_category::DaoCategory;
     use ink_storage::{
         collections::HashMap as StorageHashMap,
         traits::{PackedLayout, SpreadLayout},
@@ -43,7 +44,8 @@ mod dao_manage {
         pub dao_user:Option<DaoUsers>,
         pub dao_proposal:Option<DaoProposal>,
         pub dao_vote:Option<DaoVote>,
-        pub rainbow_govnance:Option<RainbowGovnance>,   
+        pub rainbow_govnance:Option<RainbowGovnance>,
+        pub dao_category:Option<DaoCategory>,   
     }
     
     #[derive(Debug, Copy, Clone, PartialEq, Eq, scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Default)]
@@ -58,6 +60,7 @@ mod dao_manage {
         pub dao_proposal_addr:Option<AccountId>,
         pub dao_vote_addr:Option<AccountId>,
         pub rainbow_govnance_addr:Option<AccountId>,
+        pub dao_category_addr:Option<AccountId>,
     }
 
     #[derive(scale::Encode, scale::Decode, Clone, SpreadLayout, PackedLayout)]
@@ -102,6 +105,7 @@ mod dao_manage {
                     dao_proposal:None,
                     dao_vote:None,
                     rainbow_govnance:None,
+                    dao_category:None,
                 },
                 contract_addr:ContractAddr{
                     dao_base_info_addr: None,
@@ -111,6 +115,7 @@ mod dao_manage {
                     dao_proposal_addr:None,
                     dao_vote_addr:None,
                     rainbow_govnance_addr:None,
+                    dao_category_addr:None,
                 }
             }
         }
@@ -282,6 +287,30 @@ mod dao_manage {
 
         self.contract_instance.rainbow_govnance = Some(contract_instance);
         self.contract_addr.rainbow_govnance_addr = Some(contract_addr);   
+
+        true
+       }
+       #[ink(message)]
+       pub fn init_dao_category(&mut self ,contract_name:String) ->bool{
+        let caller = self.env().caller();
+        assert_eq!(caller == self.dao_manager,true);
+        let total_balance = Self::env().balance();
+        assert_eq!(total_balance > RENT_VALUE ,true);
+        let num:u64 = self.env().block_timestamp();
+        let salt = num.to_le_bytes();
+        // let a = self.contract_instance.erc20_factory.as_ref().unwrap().get_token_by_index(1);
+        let instance_params = DaoCategory::new(self.dao_manager)
+            .endowment(RENT_VALUE)
+            .code_hash(*self.contract_hash.get(&contract_name).unwrap())
+            .salt_bytes(salt)
+            .params();
+        let contract_result = ink_env::instantiate_contract(&instance_params);
+        let contract_addr = contract_result.expect("failed at instantiating the `Base` contract");
+        let contract_instance: DaoCategory = ink_env::call::FromAccountId::from_account_id(contract_addr);
+        self.all_contract_addr.insert(contract_name,contract_addr);
+
+        self.contract_instance.dao_category = Some(contract_instance);
+        self.contract_addr.dao_category_addr = Some(contract_addr);   
 
         true
        }

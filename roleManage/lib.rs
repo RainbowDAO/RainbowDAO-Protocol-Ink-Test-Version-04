@@ -59,6 +59,7 @@ mod role_manage {
             }
             role_vec
         }
+        
         #[ink(message)]
         pub fn query_role_by_index(&self, index: i32) -> String {
             self.role_map.get(&index).unwrap().clone()
