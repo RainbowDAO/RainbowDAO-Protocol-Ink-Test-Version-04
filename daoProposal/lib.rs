@@ -106,7 +106,7 @@ mod dao_proposal {
         /// This one flips the value of the stored `bool` from `true`
         /// to `false` and vice versa.
         
-        ///转移资产提案
+        ///Transfer assets
         #[ink(message)]
         pub fn creat_proposal(&mut self ,proposal_name:String,pass_rate:u64,proposal_category:u32,vote_time:Timestamp,publicity_end_time:Timestamp , to_addr:AccountId ,to_value:u64,cancel_pass_rate:u64) -> bool {
             let caller = self.env().caller();
