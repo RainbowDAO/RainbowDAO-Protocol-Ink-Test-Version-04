@@ -2,9 +2,7 @@
 
 extern crate alloc;
 use ink_lang as ink;
-pub use self::reward_system::{
-    RewardSystem,
-};
+pub use self::reward_system::RewardSystem;
 
 #[ink::contract]
 mod reward_system {

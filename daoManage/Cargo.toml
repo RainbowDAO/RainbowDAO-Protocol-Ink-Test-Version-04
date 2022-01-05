@@ -1,7 +1,7 @@
 [package]
 name = "dao_manage"
 version = "0.1.0"
-authors = ["michaelHookon" ,"hukegong1024@gmail.com"]
+authors = ["michaelHookon" ,"michaelHookon@gmail.com"]
 edition = "2018"
 
 [dependencies]
@@ -22,6 +22,7 @@ dao_proposal = {version = "0.1.0", path = "../daoProposal",  default-features = 
 dao_vote = {version = "0.1.0", path = "../daoVote",  default-features = false, features = ["ink-as-dependency"]}
 rainbow_govnance = {version = "0.1.0", path = "../rainbowGovnance",default-features = false, features = ["ink-as-dependency"]}
 dao_category = {version = "0.1.0", path = "../daoCategory",default-features = false, features = ["ink-as-dependency"]}
+reward_system = {version = "0.1.0", path = "../rewardSystem",default-features = false, features = ["ink-as-dependency"]}
 
 
 
@@ -50,6 +51,7 @@ std = [
     "dao_vote/std",
     "rainbow_govnance/std",
     "dao_category/std",
+    "reward_system/std",
 
 ]
 ink-as-dependency = []

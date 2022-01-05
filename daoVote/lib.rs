@@ -23,7 +23,7 @@ mod dao_vote {
         erc20_address:AccountId,
         pub contract_instance:ContractInstance,
         vote2:StorageHashMap<AccountId, u64>,
-        vote1:StorageHashMap<AccountId, i32>,
+        vote1:StorageHashMap<AccountId, u64>,
         // vote_category:StorageHashMap<>, 
         join_time:StorageHashMap<AccountId,u64>,
     }
@@ -61,7 +61,7 @@ mod dao_vote {
             true
         }
         #[ink(message)]
-        pub fn balance_of(&mut self, owner_addr:AccountId) -> u64{
+        pub fn balance_of(&self, owner_addr:AccountId) -> u64{
            let mut instance:Erc20 = self.contract_instance.erc20.as_ref().unwrap().clone();
            instance.balance_of(owner_addr)
         }
@@ -72,10 +72,10 @@ mod dao_vote {
         //     true
         // }
         #[ink(message)]
-        pub fn set_user_join_time(&mut self,user_addr:AccountId,user_start_j_time:Timestamp ) ->bool{
-            let user_addr = self.env().caller();
-            let user_start_j_time = self.env().block_timestamp();
-            self.join_time.insert(user_addr, user_start_j_time);
+        pub fn set_user_join_time(&mut self,user_addr:AccountId , join_time:Timestamp) ->bool{
+            // let user_addr = self.env().caller();
+            // let user_start_j_time = self.env().block_timestamp();
+            self.join_time.insert(user_addr, join_time);
             true
         }
         ///Get joining time
@@ -92,6 +92,7 @@ mod dao_vote {
         //         votes1(); 
         //     }
         // }
+
         ///One person one vote
         #[ink(message)]
         pub fn votes1(&mut self,user_addr:AccountId) ->bool{
@@ -99,20 +100,22 @@ mod dao_vote {
             let join = self.env().block_timestamp();
             let mut instance:Erc20 = self.contract_instance.erc20.as_ref().unwrap().clone();
             let a = instance.balance_of(user_addr);
-            assert_eq!(a >= 0 ,true);
-            if join - join_start_time >= 604800000 {
-                self.vote1.insert(user_addr, 1);
+            assert_eq!(a >= 0 && join - join_start_time >= 604800,true);
+            if join - join_start_time >= 604800 {
+            self.vote1.insert(user_addr, 1);
+            return true;
+            }else{
+            return false;
             }
-            true
         }
 
- 
+
         ///One coin, one vote
         #[ink(message)]
         pub fn votes2(&mut self) ->bool{
             let caller = self.env().caller();
             let mut instance:Erc20 = self.contract_instance.erc20.as_ref().unwrap().clone();
-            let a = instance.balance_of(caller);
+            let mut a = instance.balance_of(caller);
             assert_eq!(a >= 0 ,true);
             self.vote2.insert(caller , a);
             true
@@ -120,8 +123,12 @@ mod dao_vote {
 
         
         #[ink(message)]
-        pub fn get_self_votes(&self,user:AccountId) ->i32{
+        pub fn get_self_votes_one(&self,user:AccountId) ->u64{
             *self.vote1.get(&user).unwrap()
+        }
+        #[ink(message)]
+        pub fn get_self_vote_two(&self,user:AccountId) ->u64{
+            *self.vote2.get(&user).unwrap()
         }
         #[ink(message)]
         pub fn take_self_vote(&mut self,user:AccountId) ->bool{

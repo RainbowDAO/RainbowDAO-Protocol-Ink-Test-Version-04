@@ -15,6 +15,7 @@ mod dao_manage {
     use dao_vote::DaoVote;
     use rainbow_govnance::RainbowGovnance;
     use dao_category::DaoCategory;
+    use reward_system::RewardSystem;
     use ink_storage::{
         collections::HashMap as StorageHashMap,
         traits::{PackedLayout, SpreadLayout},
@@ -27,6 +28,7 @@ mod dao_manage {
         dao_manager:AccountId,
         reward_addr:AccountId,
         erc20_addr:AccountId,
+        turn_or_off_reward_system:bool,
         pub contract_instance: ContractInstance,
         pub contract_addr: ContractAddr,
         contract_hash:StorageHashMap<String, Hash>,
@@ -45,7 +47,8 @@ mod dao_manage {
         pub dao_proposal:Option<DaoProposal>,
         pub dao_vote:Option<DaoVote>,
         pub rainbow_govnance:Option<RainbowGovnance>,
-        pub dao_category:Option<DaoCategory>,   
+        pub dao_category:Option<DaoCategory>,
+        pub reward_system:Option<RewardSystem>,
     }
     
     #[derive(Debug, Copy, Clone, PartialEq, Eq, scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Default)]
@@ -61,6 +64,7 @@ mod dao_manage {
         pub dao_vote_addr:Option<AccountId>,
         pub rainbow_govnance_addr:Option<AccountId>,
         pub dao_category_addr:Option<AccountId>,
+        pub reward_system_addr:Option<AccountId>,
     }
 
     #[derive(scale::Encode, scale::Decode, Clone, SpreadLayout, PackedLayout)]
@@ -95,6 +99,7 @@ mod dao_manage {
                 erc20_addr:AccountId::default(),
                 dao_manager:owner,
                 contract_hash:map,
+                turn_or_off_reward_system:false,
                 // dao_addr:Default::default(),
                 all_contract_addr:StorageHashMap::new(),
                 contract_instance:ContractInstance{
@@ -106,6 +111,7 @@ mod dao_manage {
                     dao_vote:None,
                     rainbow_govnance:None,
                     dao_category:None,
+                    reward_system:None,
                 },
                 contract_addr:ContractAddr{
                     dao_base_info_addr: None,
@@ -116,6 +122,7 @@ mod dao_manage {
                     dao_vote_addr:None,
                     rainbow_govnance_addr:None,
                     dao_category_addr:None,
+                    reward_system_addr:None,
                 }
             }
         }
@@ -126,6 +133,8 @@ mod dao_manage {
             self.init_erc20_factory(String::from("erc20Factory"));
             self.init_dao_vault(String::from("daoVault"));
             self.init_dao_user(String::from("daoUser"));
+            self.init_dao_category(String::from("DaoCategory"));
+
             true
         }
 
@@ -314,6 +323,37 @@ mod dao_manage {
 
         true
        }
+
+       #[ink(message)]
+       pub fn init_reward_system(&mut self ,contract_name:String) ->bool{
+        let caller = self.env().caller();
+        assert_eq!(caller == self.dao_manager,true);
+        let total_balance = Self::env().balance();
+        assert_eq!(total_balance > RENT_VALUE ,true);
+        let num:u64 = self.env().block_timestamp();
+        let salt = num.to_le_bytes();
+        // let a = self.contract_instance.erc20_factory.as_ref().unwrap().get_token_by_index(1);
+        let instance_params = RewardSystem::new(self.turn_or_off_reward_system,self.dao_manager)
+            .endowment(RENT_VALUE)
+            .code_hash(*self.contract_hash.get(&contract_name).unwrap())
+            .salt_bytes(salt)
+            .params();
+        let contract_result = ink_env::instantiate_contract(&instance_params);
+        let contract_addr = contract_result.expect("failed at instantiating the `Base` contract");
+        let contract_instance: RewardSystem = ink_env::call::FromAccountId::from_account_id(contract_addr);
+        self.all_contract_addr.insert(contract_name,contract_addr);
+
+        self.contract_instance.reward_system = Some(contract_instance);
+        self.contract_addr.reward_system_addr = Some(contract_addr);   
+
+        true
+       }
+       #[ink(message)]
+       pub fn turn_on_or_off_reward(&mut self) ->bool{
+           assert_eq!(self.env().caller() == self.dao_manager,true);
+            self.turn_or_off_reward_system = !self.turn_or_off_reward_system;
+            true
+       }
         #[ink(message)]
         pub fn contract_hash_list(&self) ->Vec<Contract>{
             let caller = self.env().caller();
@@ -364,14 +404,17 @@ mod dao_manage {
         pub fn get_balance(&self) -> u128 {
             return Self::env().balance();
         }
+        ///setting new contract addr
         #[ink(message)]
        pub fn set_new_addr(&mut self,c_name:String, c_addr:AccountId) ->bool{
-        //    let caller =  self.env().caller();
-        //    assert_eq!(caller == self.route_manage,true);
+           let caller =  self.env().caller();
+           assert_eq!(caller == self.dao_manager,true);
            self.all_contract_addr.take(&c_name);
            self.all_contract_addr.insert(c_name, c_addr);
            true
         }
+
+        ///setting dao category
         #[ink(message)]
         pub fn set_category(&mut self,dao_category:u64 ) -> bool{
             if dao_category < 0 || dao_category > 4 {
@@ -406,7 +449,7 @@ mod dao_manage {
         pub fn insert_dao_vote_join_time(&mut self, user_addr:AccountId) ->bool{
             let mut instance: DaoVote = self.contract_instance.dao_vote.as_ref().unwrap().clone();
             let a = self.get_join_start_time(user_addr);
-                instance.set_user_join_time(user_addr , a);
+                instance.set_user_join_time(user_addr ,a);
                 true
         }
         ///Inject the treasury address into the DaoProposal contract
