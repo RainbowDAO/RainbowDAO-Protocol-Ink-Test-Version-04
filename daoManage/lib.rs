@@ -388,7 +388,7 @@ mod dao_manage {
             a = key.next();
             b = hash.next();
             }
-            new_list
+            new_list        
         }
  
 
@@ -423,6 +423,11 @@ mod dao_manage {
             let caller =self.env().account_id();
             let mut instance:DaoBaseInfo = self.contract_instance.dao_base_info.as_ref().unwrap().clone();
             instance.set_dao_category(caller, dao_category)
+        }
+        ///setting dao relationship
+        pub fn get_dao_relation(&mut self,dao_address:AccountId, dao_address1:AccountId) ->u64{
+            let mut instance:DaoCategory = self.contract_instance.dao_category.as_ref().unwrap().clone();
+            instance.get_dao_relationship(dao_address, dao_address1)
         }
         ///Add DAO members
         #[ink(message)]
@@ -478,12 +483,31 @@ mod dao_manage {
             }
             true
         }
-        ///Get tickets
+        ///Get tickets:One person one vote PS:Must join one week later
         #[ink(message)]
         pub fn get_voets(&mut self, user_addr:AccountId) ->bool{
             let mut instance: DaoVote = self.contract_instance.dao_vote.as_ref().unwrap().clone();
             instance.votes1(user_addr);
             true
+        }
+        ///Get tickets:One coin, one vote
+        #[ink(message)]
+        pub fn get_votes_second(&mut self) ->bool{
+            let mut instance: DaoVote = self.contract_instance.dao_vote.as_ref().unwrap().clone();
+            instance.votes2();
+            true
+        }
+        ///check_vote1_amount:One person one vote
+        #[ink(message)]
+        pub fn votes_amount1(&self,user_addr:AccountId) ->u64{
+            let mut instance: DaoVote = self.contract_instance.dao_vote.as_ref().unwrap().clone();
+            instance.get_self_votes_one(user_addr)
+        }
+        ///check_vote2_amount:One coin, one vote
+        #[ink(message)]
+        pub fn votes_amount2(&self,user_addr:AccountId) ->u64{
+            let mut instance: DaoVote = self.contract_instance.dao_vote.as_ref().unwrap().clone();
+            instance.get_self_vote_two(user_addr)
         }
         ///Create proposal
         #[ink(message)]
@@ -505,18 +529,21 @@ mod dao_manage {
             let mut instance: DaoProposal = self.contract_instance.dao_proposal.as_ref().unwrap().clone();
             instance._check_status(proposal_name ,proposal_id)
         }
+        ///erc20 factory creat new token
         #[ink(message)]
         pub fn mint_new_token(&mut self, erc20_hash: Hash,name:String ,symbol:String ,initial_supply:u64, decimals:u8, controller: AccountId) ->bool{
             let mut instance: Erc20Factory = self.contract_instance.erc20_factory.as_ref().unwrap().clone();
             instance.mint_token(erc20_hash ,name,symbol,initial_supply,decimals,controller);
             true
         }
+        ///get erc20 token_addr
         #[ink(message)]
         pub fn check_erc20_addr(&mut self,name:String) ->bool{
             let mut instance: Erc20Factory = self.contract_instance.erc20_factory.as_ref().unwrap().clone();
            self.erc20_addr =  instance.get_token_by_symbol(name);
             true
         }
+        ///insert reward_system_addr 
         #[ink(message)]
         pub fn insert_reward_system_addr(&mut self,reward_system_addr:AccountId) -> bool{
             assert!(self.env().caller() == self.dao_manager);
