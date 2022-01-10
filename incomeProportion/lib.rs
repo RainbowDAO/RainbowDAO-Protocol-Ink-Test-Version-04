@@ -1,20 +1,29 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+extern crate alloc;
 use ink_lang as ink;
+pub use self::income_proportion::IncomeProportion;
 
 #[ink::contract]
-mod incomeProportion {
+mod income_proportion {
+    use alloc::string::String;
+    use ink_storage::{
+        collections::HashMap as StorageHashMap,
+        traits::{PackedLayout, SpreadLayout},
+    };
 
     #[ink(storage)]
     pub struct IncomeProportion {
         manager:AccountId,
+        income_proportion:StorageHashMap<String,u64>,
     }
 
     impl IncomeProportion {
         #[ink(constructor)]
         pub fn new(manager:AccountId) -> Self {
             Self { 
-                manager, 
+                manager,
+                income_proportion:StorageHashMap::new(),
                 
             }
         }
@@ -26,6 +35,18 @@ mod incomeProportion {
             true
         }
 
+        #[ink(message)]
+        pub fn income_proportion(&mut self,proportion:String, amount:u64) -> bool{
+            let caller = self.env().caller();
+            assert_eq!(caller == self.manager, true);
+            self.income_proportion.insert(proportion, amount);
+            true
+
+        }
+        #[ink(message)]
+        pub fn check_income_proportion(&self,proportion:String) ->u64{
+            *self.income_proportion.get(&proportion).unwrap()
+        }
         #[ink(message)]
         pub fn get_manager_addr(&self) ->AccountId {
             self.manager
