@@ -16,6 +16,7 @@ mod dao_manage {
     use rainbow_govnance::RainbowGovnance;
     use dao_category::DaoCategory;
     use reward_system::RewardSystem;
+    use income_proportion::IncomeProportion;
     use ink_storage::{
         collections::HashMap as StorageHashMap,
         traits::{PackedLayout, SpreadLayout},
@@ -49,6 +50,7 @@ mod dao_manage {
         pub rainbow_govnance:Option<RainbowGovnance>,
         pub dao_category:Option<DaoCategory>,
         pub reward_system:Option<RewardSystem>,
+        pub income_proportion:Option<IncomeProportion>,
     }
     
     #[derive(Debug, Copy, Clone, PartialEq, Eq, scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Default)]
@@ -65,6 +67,7 @@ mod dao_manage {
         pub rainbow_govnance_addr:Option<AccountId>,
         pub dao_category_addr:Option<AccountId>,
         pub reward_system_addr:Option<AccountId>,
+        pub income_proportion_addr:Option<AccountId>,
     }
 
     #[derive(scale::Encode, scale::Decode, Clone, SpreadLayout, PackedLayout)]
@@ -112,6 +115,7 @@ mod dao_manage {
                     rainbow_govnance:None,
                     dao_category:None,
                     reward_system:None,
+                    income_proportion:None,
                 },
                 contract_addr:ContractAddr{
                     dao_base_info_addr: None,
@@ -123,6 +127,7 @@ mod dao_manage {
                     rainbow_govnance_addr:None,
                     dao_category_addr:None,
                     reward_system_addr:None,
+                    income_proportion_addr:None,
                 }
             }
         }
@@ -349,6 +354,31 @@ mod dao_manage {
         true
        }
        #[ink(message)]
+       pub fn init_income_proportion(&mut self ,contract_name:String) ->bool{
+        let caller = self.env().caller();
+        assert_eq!(caller == self.dao_manager,true);
+        let total_balance = Self::env().balance();
+        assert_eq!(total_balance > RENT_VALUE ,true);
+        let num:u64 = self.env().block_timestamp();
+        let salt = num.to_le_bytes();
+        // let a = self.contract_instance.erc20_factory.as_ref().unwrap().get_token_by_index(1);
+        let instance_params = IncomeProportion::new(self.dao_manager)
+            .endowment(RENT_VALUE)
+            .code_hash(*self.contract_hash.get(&contract_name).unwrap())
+            .salt_bytes(salt)
+            .params();
+        let contract_result = ink_env::instantiate_contract(&instance_params);
+        let contract_addr = contract_result.expect("failed at instantiating the `Base` contract");
+        let contract_instance: IncomeProportion = ink_env::call::FromAccountId::from_account_id(contract_addr);
+        self.all_contract_addr.insert(contract_name,contract_addr);
+
+        self.contract_instance.income_proportion = Some(contract_instance);
+        self.contract_addr.income_proportion_addr = Some(contract_addr);   
+
+        true
+       }
+       ///turn on or off reward
+       #[ink(message)]
        pub fn turn_on_or_off_reward(&mut self) ->bool{
            assert_eq!(self.env().caller() == self.dao_manager,true);
             self.turn_or_off_reward_system = !self.turn_or_off_reward_system;
@@ -390,8 +420,14 @@ mod dao_manage {
             }
             new_list        
         }
- 
-
+        ///set income proportion
+        #[ink(message)]
+        pub fn insert_income_proportion(&mut self,proportion:String, amount:u64) ->bool{
+            let mut instance:IncomeProportion = self.contract_instance.income_proportion.as_ref().unwrap().clone();
+            instance.income_proportion(proportion, amount);
+            true
+        }
+        ///change manager
         #[ink(message)]
         pub fn transfer_manager(&mut self,to:AccountId) ->bool{
             let caller = self.env().caller();
@@ -399,7 +435,7 @@ mod dao_manage {
             self.dao_manager = to;
             true
         }
-
+        ///check token amount
         #[ink(message)]
         pub fn get_balance(&self) -> u128 {
             return Self::env().balance();
@@ -422,7 +458,8 @@ mod dao_manage {
             }
             let caller =self.env().account_id();
             let mut instance:DaoBaseInfo = self.contract_instance.dao_base_info.as_ref().unwrap().clone();
-            instance.set_dao_category(caller, dao_category)
+            instance.set_dao_category(caller, dao_category);
+            true
         }
         ///setting dao relationship
         pub fn get_dao_relation(&mut self,dao_address:AccountId, dao_address1:AccountId) ->u64{

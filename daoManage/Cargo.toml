@@ -23,6 +23,7 @@ dao_vote = {version = "0.1.0", path = "../daoVote",  default-features = false, f
 rainbow_govnance = {version = "0.1.0", path = "../rainbowGovnance",default-features = false, features = ["ink-as-dependency"]}
 dao_category = {version = "0.1.0", path = "../daoCategory",default-features = false, features = ["ink-as-dependency"]}
 reward_system = {version = "0.1.0", path = "../rewardSystem",default-features = false, features = ["ink-as-dependency"]}
+income_proportion ={version = "0.1.0", path = "../incomeProportion", default-features = false , features = ["ink-as-dependency"]}
 
 
 
@@ -52,6 +53,7 @@ std = [
     "rainbow_govnance/std",
     "dao_category/std",
     "reward_system/std",
+    "income_proportion/std"
 
 ]
 ink-as-dependency = []
